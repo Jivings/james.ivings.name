@@ -86,7 +86,11 @@ sup { line-height: 1ex; }
 #disqus_thread { padding-top: 0; }
 
 /* TODO
-#page { counter-reset: section; }
+#page { 
+  counter-reset: section; 
+  overflow: hidden;
+
+}
 #page h2:before {
 	margin-left: -3.5ex;
 	color: silver;
@@ -195,7 +199,6 @@ ul.compact li a {
 /* @group Header */
 #header, #header a { color: black; text-decoration: none; }
 #header .hover { color: transparent; }
-#header:hover a { color: black; text-shadow: #aaa 2px 2px 3px;}
 #header:hover a:hover { text-decoration: none; }
 #header {
 	position: relative;
@@ -238,8 +241,6 @@ ul.compact li a {
 	font-size: 10pt;
 	line-height: 75%
 }
-#header:hover .byline a { text-shadow: none; }
-#header:hover .byline a:hover { color: black; text-shadow: #aaa 1px 1px 2px;}
 
 /* @group Twitter */
 #twitter_update_list { display: inline; margin: 0; }

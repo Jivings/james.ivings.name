@@ -38,13 +38,13 @@ The website is hosted on my VPS, which I rent from [Xilo](http://xilo.net).
 This gives me a much greater level of control than standard web hosting and I
 use the spare space to host my private projects.
 
-The content of the site is written using
-[Markdown](http://daringfireball.net/projects/markdown/), using the vim editor.
+The content of the site is written in 
+[Markdown](http://daringfireball.net/projects/markdown/), using the Vim editor.
 Jekyll controls the compilation of the markdown and page structure into the
 static site you see before you.
 
 The site is edited and tested locally before being pushed to my [GitHub
-repository](https://github.com/Jivings/ivings.name) using
+repository](https://github.com/Jivings/james.ivings.name) using
 Git. I then checkout the new site on my VPS and the changes are automatically
 published by Apache.
 

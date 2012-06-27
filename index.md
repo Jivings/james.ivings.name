@@ -1,12 +1,11 @@
 ---
-layout: page
-title: Greetings
+layout: page_index
+title:
 tagline: Supporting tagline
 ---
 
-
 My name is James Ivings, a Computer Science graduate from [The University Of The
-West Of England](http://uwe.ac.uk). Courses include 
+West Of England](http://uwe.ac.uk). 
 
 I was born in Stratford-upon-Avon, where I reluctantly attended high school.
 After achieving A-levels and fending
@@ -18,5 +17,3 @@ technologies. I am continually developing, and will use this site to publish my
 projects and the issues I encounter. 
 
 Thanks for stopping by, I hope you enjoy your stay.
-
-
