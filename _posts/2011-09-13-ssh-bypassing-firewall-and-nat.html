@@ -1,0 +1,35 @@
+---
+layout: post
+title: SSH bypassing Firewall and NAT
+tags:
+- Linux
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+  wp_plus_one_redirect: ''
+  sfw_comment_form_password: i2wdtG3UOUs1
+---
+Just spent a while helping <a href="https://plus.google.com/110337150199578371216/posts" title="Jon Tremelling" target="_blank">Jon Tremelling</a> with his most recent Linux faux pas (for the future Jon; Don't ever run dd on the wrong device!).
+
+Anyway, as per usual we have a problem with me trying to SSH around his routers closed and forwarded ports. This got me thinking about reverse SSH tunneling and if we could use my VPS as a middle man.
+
+Through some Googling I found the SSH option -R which allows you to bind a port on the remote server to a new host.
+So let us run this command on the machine we are trying to reach, our destination machine, using my VPS (ivings.org.uk) as the middle man:
+
+<pre id="terminal" user="james" computer="FromDust">ssh -R 10022:localhost:22 middleman@ivings.org.uk</pre>
+
+This opens and binds port 10022 on the VPS for listening, and all connections on that port are forwarded to port 22 of our destination.
+
+Now if I ssh to the VPS:
+
+<pre id="terminal" user="james" computer="FromDust">ssh james@ivings.org.uk</pre>
+
+Then connect to the tunnel port:
+
+<pre id="terminal" user="james" computer="FromDust">ssh user@localhost -p 10022</pre>
+
+Where `user` is our username for the destination, then we should be logged on through our tunnel, bypassing the destination machines firewall and NAT.
+
+If you want to add extra security, then this situation should work fine with normal <a href="http://pkeck.myweb.uga.edu/ssh/">ssh keys instead of passwords</a>.

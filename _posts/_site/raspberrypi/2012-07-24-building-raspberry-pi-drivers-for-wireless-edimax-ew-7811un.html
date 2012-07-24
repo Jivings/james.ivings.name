@@ -1,0 +1,58 @@
+<p>At some point I decided that it would be excellent if my Raspberry Pi was not bound by the shackles of ethernet cabling, and therefore after much deliberation I purchased the Edimax EW7811un.</p>
+
+<p>This looked like an ideal piece of kit, and I knew from experience that Edimax devices were usually quite compatible with Linux, and for &lt; £5 where could I go wrong?</p>
+
+<p>Unfortunately it has taken me several attempts to install the modules for the wireless device. Although several solutions have been created for easy installation on other Raspberry Pi operating systems (all withint Googlable distance), no solution immediately presents itself for Arch.</p>
+
+<p>After various levels of trial and error, I discovered that the following steps must be taken to build the drivers for Arch. I hope this information is able to help others with the same issue.</p>
+
+<h2 id='prerequisites'>Prerequisites</h2>
+
+<ul>
+<li>
+<p>Download the driver sources from the <a href='http://www.edimax.co.uk/en/support_detail.php?pd_id=328&amp;pl1_id=1&amp;pl2_id=44#01'>Edimax website</a>. These allow the driver to be built from source.</p>
+</li>
+
+<li>
+<p>Install the Raspberry Pi kernel headers. For some reason the driver looks for the headers at a symlink that points to an incorrect location. So we must also recreate that link. Replace the kernel versions with the installed ones.</p>
+
+<p>sudo pacman -S raspberrypi-kernel-headers sudo ln -s /lib/modules/3.1.9-30-ARCH+/build /usr/src/linux-3.1.9-30-ARCH+</p>
+</li>
+</ul>
+
+<h2 id='patching'>Patching</h2>
+
+<p>The driver sources are based on an older kernel version, so we need to do some patching.</p>
+
+<p>Unzip and untar the driver sources</p>
+
+<pre><code>unzip rtl8192CU_8188CU_linux_v2.0.939.20100726.zip
+cd rtl8192CU_8188CU_linux_v2.0.939.20100726/driver
+tar xzf rtl8192CU_linux_v2.0.939.20100726.tar.gz</code></pre>
+
+<p>Edit <code>include/rtw_xmit.h</code> and add the following include:</p>
+
+<pre><code>#include &lt;linux/interrupt.h&gt;</code></pre>
+
+<p>Edit <code>os_dep/osdep_service.c</code> and add:</p>
+
+<pre><code>#include &lt;linux/semaphore.h&gt;
+#define init_MUTEX(sem) sema_init(sem, 1)</code></pre>
+
+<p>Add a new platform to the <code>MakeFile</code></p>
+
+<pre><code>ifeq ($(CONFIG_PLATFORM_PI), y)
+EXTRA_CFLAGS += -DCONFIG_LITTLE_ENDIAN
+ARCH := arm
+CROSS_COMPILE := arm-bcm2708-linux-gnueabi-
+KVER := 3.1.9-30-ARCH+
+KSRC := ~/pi-sources
+MODDESTDIR :=
+~/pi-sources/lib/modules/3.1.9-30-ARCH+/kernel/drivers/net/wireless/
+endif</code></pre>
+
+<h2 id='building'>Building</h2>
+
+<p>To build the module run:</p>
+
+<pre><code>make CONFIG_PLATFORM_PI=y modules.</code></pre>

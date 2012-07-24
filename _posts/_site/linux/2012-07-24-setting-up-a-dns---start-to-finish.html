@@ -1,0 +1,99 @@
+<p>Last week my domain name expired with my provider, so I decided to switch my domain registrar to Xilo, so that all my services would be together. However Xilo don&#8217;t provide an entry on their Nameserver, so you have to provide your own if you actually want the domain to point to anywhere. A bit annoying, but I had been meaning to set up my own on my VPS anyway, and what a great opportunity, right?!</p>
+
+<p>So I sent a request off to one.com to cancel my existing account, to which they helpfully complied. Unhelpfully however they sent a confirmation email to my @ivings.org.uk address, the one they had just cancelled. Nice one guys! Due to this undersight I wasn&#8217;t aware of my account termination until 2 days after.</p>
+
+<p>My situation so far; No website, no forwarding email address. To me this means that all of my emails were getting kicked back to the sender, frustrating to say the least!</p>
+
+<p>Moving on&#8230; setting up the DNS.</p>
+
+<h1 id='changing_the_domain_dns_records'>Changing the domain DNS records</h1>
+
+<p># First thing to do is change the records on the domain. This is fairly simple but <em>note</em>; If you want to host the DNS on the same system as your website like me, then you also need to set <a href='http://en.wikipedia.org/wiki/Domain_Name_System#Circular_dependencies_and_glue_records'>Glue
+Records</a> which protect from circular dependencies:</p>
+
+<pre><code>Nameserver 1 : ns1.ivings.org.uk 
+Nameserver 2 : ns2.ivings.org.uk
+Glue : 95.172.245.87</code></pre>
+
+<p>The Glue record specifies the IP of my VPS, where the DNS will be hosted.</p>
+
+<h1 id='configuring_the_dns'>Configuring the DNS</h1>
+
+<p>First install <a href='http://en.wikipedia.org/wiki/BIND'>bind</a>:</p>
+
+<pre><code>apt-get install bind9</code></pre>
+
+<p>Next create the Zone that will represent your domain:</p>
+
+<pre><code>nano /etc/bind/zones/ivings.org.uk.db
+
+SOA ivings.org.uk. admin.ivings.org.uk. (
+ // Do not change these
+ 2007031001
+ 28800
+ 3600
+ 604800
+ 38400
+)
+
+
+ivings.org.uk. IN NS ns1.ivings.org.uk.
+ivings.org.uk. IN MX 10 mail.ivings.org.uk.
+
+www IN A 172.0.0.1
+ns1 IN A 172.0.0.1
+mail IN A 172.0.0.1</code></pre>
+
+<p>As you can see I&#8217;ve set up my nameserver and mailserver (more on mail later) as well as some A records. You can find more information Zone files <a href='http://en.wikipedia.org/wiki/Zone_file'>here</a>. As you can see the A records are directing to localhost, as the DNS is set up on the same system as the site is hosted.</p>
+
+<p>Next create a reverse DNS zone file, this is used for reverse DNS lookups, and occasionally by mail server authentication. It is generally recommended and should look something like this;</p>
+
+<pre><code>nano rev.0.168.192.in-addr.arpa
+
+7200
+@ IN SOA ns1.ivings.org.uk. admin.ivings.org.uk. (
+ 2007031001;
+ 28800;
+ 604800;
+ 604800;
+ 86400
+ )
+
+ IN NS ns1.ivings.org.uk.
+ 1 IN PTR ivings.org.uk.</code></pre>
+
+<p>Finally you will want to add these Zones to you named.conf.local file;</p>
+
+<pre><code>nano /etc/bind/named.conf.local
+
+# For reverse DNS
+zone &quot;0.168.192.in-addr.arpa&quot; {
+  type master;
+  file &quot;/etc/bind/zones/rev.0.168.192.in-addr.arpa&quot;;
+};
+
+zone &quot;ivings.org.uk&quot; {
+ type master;
+ file &quot;/etc/bind/zones/ivings.org.uk.db&quot;;
+};</code></pre>
+
+<p>And start the bind service;</p>
+
+<pre><code>service bind9 start
+* Starting domain name service... bind9 [ OK ]</code></pre>
+
+<p>You can test your new DNS by replacing <code>ivings.name</code> with your domain and following this link: <a href='http://freedns.afraid.org/domain/dnstrace.php?domain=ivings.org.uk'>http://freedns.afraid.org/domain/dnstrace.php?domain=ivings.org.uk</a></p>
+
+<p>Congrats, your DNS is up and running!</p>
+
+<p>If you want to make changes then be sure to reload the configuration files as well as restart bind:</p>
+
+<pre><code>sudo rndc reconfig
+sudo rndc reload
+server reload successful
+
+service bind9 restart
+* Stopping domain name service... bind9 [ OK ]
+* Starting domain name service... bind9 [ OK ]</code></pre>
+
+<p>If you restart without reloading the files then the server will use cached versions, and the changes wont take effect.</p>

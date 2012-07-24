@@ -1,0 +1,142 @@
+---
+layout: post
+title: Grab UI window text with Python
+tags:
+- Java
+- Python
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+  _wp_old_slug: ''
+  sfw_comment_form_password: o0nj4ULG0KND
+---
+I just discovered this old piece of code while digging through ancient e-mails. which I was quite pleased about since I thought it had been lost.
+
+I wrote it to perform the simple function of getting text from an open window in XP, though I assume it would work for other Windows versions.
+I had been writing a Java program which required text from the output of a native Windows application. And although this could probably better be achieved in a different language, I thought that integrating Python output into a Java application would be fairly trivial. 
+
+I achieved it by simply using <a href="http://download.oracle.com/javase/1.5.0/docs/api/java/lang/Runtime.html">Runtime</a> and <a href="http://download.oracle.com/javase/1.4.2/docs/api/java/lang/Process.html">Process</a> objects.
+
+<pre lang="java" line="1">
+final String pythonDir = "cmd /c pythonFile.py";
+final Runtime r  = Runtime.getRuntime();
+
+//run python process
+try
+{
+   Process p = r.exec(pythonDir);
+   BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()), 5000);
+
+   //while there is text, read.
+   while ((line = br.readLine()) != null)
+   {
+     //parse each line
+   }
+}
+catch (Exception e)
+{ }
+// done
+</pre>
+
+
+However, from what I remember it was the Python that proved exceptionally difficult, mainly due to terrible documentation, and from some Googling I can see I'm not the only one to have found this <a href="http://mail.python.org/pipermail/python-win32/2004-December/002771.html">problem</a>. Now at least it does seem to have gotten <a href="http://www.pha.com.au/kb/index.php/Python_-_ctypes#GUI_Examples">better</a>, though probably it's easier to find now that I know what to search for.
+
+Nevertheless, I managed to hack together workable code to find a specific open window based on the Title bar text, and grab text from that window.
+Though it is probably not the most elegant or fastest solution, it worked and I was able to read the window text output into my Java application perfectly.
+
+I can't remember enough to document my code line by line, but I think from the comments it should be quite straightforward...
+
+<pre lang="python" line="1">import win32con
+import win32gui
+import array
+import ctypes
+import struct
+import sys
+import win32api
+from ctypes import *
+
+results = []
+topWindows = []
+chatHwnd = 0
+windowTitleText = "Window Title"
+#The text that the wanted window string begins with, so we can find it
+windowStartText = "Welcome"
+
+
+if __name__ == '__main__':
+    #declare global
+    global chatHwnd
+    #enumerate all open windows, return topWindows
+    win32gui.EnumWindows(_windowEnumerationHandler, topWindows)
+    #check each window to fin the one we need
+    for hwnd, windowText, windowClass in topWindows:
+    if windowText.find(windowTitleText)&gt;-1:
+            #search the child windows
+            # save the window handle
+            chatHwnd = searchChildWindows(hwnd)
+            #set the appropriate window focus (if needed)
+            win32gui.SetFocus(hwnd)
+            win32gui.SetForegroundWindow(hwnd)
+
+            initBuff = 0
+            #get text
+            while chatHwnd&gt;0:
+
+                buf_size = 1 + win32gui.SendMessage(chatHwnd, win32con.WM_GETTEXTLENGTH, 0, 0)
+                buffer = win32gui.PyMakeBuffer(buf_size)
+                # send a win GETTEXT request to the window and read into buffer
+                win32gui.SendMessage(chatHwnd, win32con.WM_GETTEXT, buf_size, buffer)
+                if buf_size-initBuff&gt;1:
+                      print buffer[initBuff:buf_size]
+
+                initBuff = buf_size
+                #after 5 seconds, get any new text
+                time.sleep(5)
+                # needed for Java to read the output correctly
+                sys.stdout.flush()
+
+
+'''Handler to enumerate the window with param hwnd
+Returns resultsList; the window details as an array,
+with hwnd, text and class'''
+def _windowEnumerationHandler(hwnd, resultList):
+    resultList.append((hwnd,
+                       win32gui.GetWindowText(hwnd),
+                       win32gui.GetClassName(hwnd)))
+
+'''Recursive function, checks the text of all the children of
+the window with handle param hwnd until it reaches the text that
+we require, returns the String of this data'''
+def searchChildWindows(hwnd):
+childWindows = []
+    try:
+        #get child windows
+        win32gui.EnumChildWindows(hwnd, _windowEnumerationHandler, childWindows)
+    except win32gui.error, exception:
+        # This seems to mean that the control does not or cannot have child windows
+        return
+
+    #get details of each child window
+    for childHwnd, windowText, windowClass in childWindows:
+        #create text buffer
+        buf_size = 1 + win32gui.SendMessage(childHwnd, win32con.WM_GETTEXTLENGTH, 0, 0)
+        buffer = win32gui.PyMakeBuffer(buf_size)
+        #get text from Window using hardware call. (getWindowText() did not return anything)
+        win32gui.SendMessage(childHwnd, win32con.WM_GETTEXT, buf_size, buffer)
+        #check to see if it's the data we want...
+        if buffer[0:buf_size].find(windowStartText)&gt;-1:
+            #return the hwnd
+
+            #global chatHwnd
+            #chatHwnd = childHwnd
+            return int(childHwnd)
+        #else recurse, checking this window for children
+        #might not be needed...
+        #searchChildWindows(childHwnd)
+
+
+</pre>
+
+And there we are, I hope this is able to save someone else all the time that it cost me.

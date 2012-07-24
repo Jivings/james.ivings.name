@@ -1,0 +1,54 @@
+---
+layout: post
+title: Why StackOverflow?
+tags: []
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+  wp_plus_one_redirect: ''
+  sfw_comment_form_password: WzTCbEZExwjy
+---
+Recently I've found myself getting into <a href="http://www.stackoverflow.com" target="_blank">StackOverflow</a> in a big way. There are two different types of StackOverflow users, those who use it for an easy answer to their less simple programming problems, and those who indulge the first type by answering.
+
+Having leeched the StackOverflow community for the first three years of my degree I decided it was time to give something back. This was the single best self development decision I have ever made.
+
+I have learned more from answering SO questions over the last few weeks than I've learned in the last few years of my degree. As an example, here's a question from the other day that I answered. The original question (<a href="http://stackoverflow.com/questions/9045353/how-to-block-a-group-of-threads-in-java">found here</a>) was this:
+
+<blockquote>I have a task in which I have to read data using different threads.
+
+The problem is that due to the limitation of read rates, I built different threads with thread groups.
+
+Can any one tell me how to sleep one entire thread group so that it begins execution from exact same place where it left and the other thread groups remain executing? </blockquote>
+
+Not a very normal problem, obviously Threads should not be controlled like this. However, trying to be helpful I hastily answered:
+
+<blockquote><em>Is it enough to enumerate the Thread group and call sleep on each thread?</em>
+<div style="font-style:normal;">
+<pre lang="java" line="1">
+// initialise the ThreadGroup with Threads
+ThreadGroup tg; 
+// initialize an Array to hold enumerated Threads
+Thread[] threadsToSleep = new Thread[count];
+// Copy thread references into array
+tg.enumerate(threadsToSleep); 
+// Sleep each thread for specified time
+for (Thread t : threadsToSleep {
+    t.sleep(sleepTime)
+}
+</pre>
+</div>
+</blockquote>
+
+
+That sounds simple enough. However, had I thought about it for more than a minute I would have realised a debilitating flaw, which was instantly pointed out to me by the comment:
+
+<blockquote>Sleep is a static method. You will sleep the current thread and not the thread you're iterating on – John Vint</blockquote>
+
+Duh. Of course Thread.sleep() is Static and my answer is useless.
+
+My idiocy aside, the point I'm trying to make is that my quick humiliation on this question means I will <strong>never forget my mistake</strong>. 
+
+I need not point out the usefulness of this. It's even <a href="http://programmers.stackexchange.com/questions/20407/will-high-reputation-in-stack-overflow-help-to-get-a-good-job">suggested</a> that high StackOverflow reputation will help you stand out to employers and is a great thing to <a href="http://meta.stackoverflow.com/questions/58947/at-what-point-do-you-put-your-so-reputation-in-your-resume">include on your resume</a>. 
+So what are you waiting for? Start answering questions too!

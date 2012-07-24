@@ -1,0 +1,51 @@
+---
+layout: post
+title: JavaScript Interpretation - The Faults and Foibles
+tags: []
+status: draft
+type: post
+published: false
+meta:
+  _edit_last: '1'
+  wp_plus_one_redirect: ''
+---
+As I expand my knowledge of JavaScript I seem to be encountering more and more of its eccentricies. Although many blogs list the problems with the JavaScript language as a whole, I thought I would collect in this post a short list of the most confusing and interesting aspects of JavaScript <strong>interpreters</strong>. Hopefully this will help any JavaScript developers that may happen upon this lost corner of the internet.
+
+<strong>Semi-Colon Insertion</strong>
+Due to the leniency of JavaScript interpreters, writing code without line delimiting semi-colons is perfectly acceptable. To deal with this, during execution most interpreters will insert the semi-colons at the end of what it believes is a complete statement.
+For example, for anyone using Allman bracket style (though why would you?!), the following statement looks completely valid:
+if(x === null)
+{
+   x = 1
+}
+
+However, it is possible for the interpreter to determine that the first line is actually a complete statement. This would result in semi-colons being inserted like this:
+if(x == null);
+{ 
+  x = 1; 
+};
+
+What this gives us is a closed if statement, and x always being set to 1 regardless. Clearly not the intended outcome.
+ 
+<strong>Variable Hoisting</strong>
+Scope defines the context in which variables and methods can be accessed. Traditional languages, such as C declare <code>block-level</code> scope. This means that variables declared in any code block (such as <code>if</code> statements), will not be accessible from outside that block. 
+JavaScript however, declares <code>function-level</code> scope, statements do not create scope, only functions. Thus variables declared anywhere within a function can be referenced anywhere in that same function. To support this notion, all declarations are <code>hoisted</code> to the top of their containing scope by the interpreter. For example take the following function;
+
+function sayHello() {
+   if(true) {
+      var x = 'world';
+   }
+   var y = 'hello'
+   return x + y; // returns 'hello world'
+}
+
+While it appears that the variable x would not be accessible to the returning concatenation, the interpreter will <code>hoist</code> the declarations, making them available to the whole function;
+
+function sayHello() {
+   var x, y; 
+   if(true) {
+      x = 'world';
+   }
+   y = 'hello'
+   return x + y;
+}

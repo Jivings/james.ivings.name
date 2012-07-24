@@ -1,0 +1,71 @@
+---
+layout: post
+title: Upgrading Ubuntu from Jaunty 9.04 to Lucid 10.04
+tags:
+- Linux
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+  wp_plus_one_redirect: ''
+  sfw_comment_form_password: 6dPFUpdxc0Pt
+---
+Recently the lack of support for the version of Ubuntu I was lumped with on my VPS (9.04) was starting to be a major hindrance to development. It appears that once an Ubuntu version gets too old all the packages get deprecated completely, rendering the package manager apt completely useless.
+
+Obviously I had put off upgrading long enough, so went searching on the best way to migrate to the newest version. The first command I found seemed pretty simple;
+
+<pre id="terminal">sudo do-release-upgrade</pre>
+
+This should automagically download the latest kernel source and upgrade all packages to the newest supported version, awesome. However, if it was that simple then I wouldn't be blogging about it right? Right.
+It appears that this command gets deprecated when you fall more than one version behind. So although it can be used effectively to upgrade from Karmic to Lucid, it doesn't work when upgrading from Jaunty. For reference, the the command gives the following output:
+
+<pre id="terminal">sudo do-release-upgrade
+
+Checking for a new ubuntu release
+Done Upgrade tool signature
+Done Upgrade tool
+Done downloading            
+extracting 'lucid.tar.gz'
+authenticate 'lucid.tar.gz' against 'lucid.tar.gz.gpg' 
+tar: Removing leading `/' from member names
+
+Reading cache
+
+Checking package manager
+
+Can not upgrade 
+
+An upgrade from 'jaunty' to 'lucid' is not supported with this tool. </pre>
+
+In order to pull this off we firstly need to upgrade to Karmic. Luckily there is a small hack that allows us to upgrade all our packages to Karmic versions, including the kernel. 
+Edit the apt sources list so that it looks like this:
+
+<pre id="terminal">sudo nano /etc/apt/sources.list
+
+## EOL upgrade sources.list
+# Required
+deb http://archive.ubuntu.com/ubuntu/ karmic main restricted universe multiverse
+deb http://archive.ubuntu.com/ubuntu/ karmic-updates main restricted universe multiverse
+deb http://archive.ubuntu.com/ubuntu/ karmic-security main restricted universe multiverse
+
+# Optional
+#deb http://archive.ubuntu.com/ubuntu/ karmic-backports main restricted universe multiverse
+#deb http://archive.ubuntu.com/ubuntu/ karmic-proposed main restricted univ</code>
+</pre>
+
+Now, if we run a system upgrade, all Karmic packages will be downloaded and installed, including the new kernel.
+
+<pre id="terminal">sudo apt-get update && apt-get upgrade</pre>
+
+Now we are running Karmic we can upgrade to Lucid using:
+<pre id="terminal">sudo do-release-upgrade</pre>
+
+
+Hopefully you should not have any issues with this, but I had a couple with the old kernel files.
+Explained by <a href="http://askubuntu.com/questions/59261/dpkg-cannot-remove-package-linux-restricted-modules">this StackOverflow post by me</a>, I was stuck with some old kernel modules that would not uninstall because the kernels no longer existed. This was giving me this error message every time I ran apt:
+<pre id="terminal">The following packages will be REMOVED
+    linux-restricted-modules-2.6.28-11-server 
+    linux-restricted-modules-2.6.28-19-server
+</pre>
+Thank god for StackOverflow or I would still be stuck on it now. Check the link above for the given solution. Apart from that, and <a href="http://askubuntu.com/questions/59272/php-not-working-in-apache2-after-system-upgrade/59393#59393">a few issues</a> with my Apache server, it was a relatively smooth upgrade.
