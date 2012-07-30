@@ -3,7 +3,7 @@ layout: post
 title: "Building Raspberry Pi drivers for Wireless Edimax EW 7811UN"
 description: ""
 category: Raspberry Pi
-tags: [arch,linux,raspberrypi,wireless,edimax]
+tags: [arch, linux, raspberrypi, wireless, edimax]
 ---
 {% include JB/setup %}
 
